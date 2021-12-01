@@ -1,0 +1,103 @@
+<html>
+    <body>
+        <canvas id="mainCanvas" width="1000" height="500"></canvas><br>
+        <span id="v0span">v0 = 1</span><br><input id="v0" type="range" min="0" max="5" value="1" step = 0.01 oninput="onParameterChange()"/><br>
+        <span id="pspan">p = 1</span><br><input id="p" type="range" min="-5" max="5" value="1" step = 0.01 oninput="onParameterChange()"/><br>
+        <span id="Bspan">B = 1</span><br><input id="B" type="range" min="-5" max="5" value="1" step = 0.01 oninput="onParameterChange()"/><br>
+        <span id="Espan">E = 1</span><br><input id="E" type="range" min="-5" max="5" value="1" step = 0.01 oninput="onParameterChange()"/><br>
+        <span id="revdtspan">dt = 0.05</span><br><input id="revdt" type="range" min="10" max="100" value="20" step = 0.01 oninput="onParameterChange()"/>
+        <script>
+            var canvas = document.getElementById("mainCanvas");
+            var ctx = canvas.getContext("2d");
+            var width = canvas.width;
+            var height = canvas.height;
+            var halfHeight = height / 2;
+            ctx.setTransform(1,0,0,-1,0,height);
+            var x0 = 0;
+            var y0 = 1;
+            var v0 = 1;
+            var p = 1;
+            var B = 1;
+            var E = 1;
+            var dt = 0.05;
+            var v0Input = document.getElementById("v0");
+            var pInput = document.getElementById("p");
+            var BInput = document.getElementById("B");
+            var EInput = document.getElementById("E");
+            var revdtInput = document.getElementById("revdt");
+            var v0span = document.getElementById("v0span");
+            var pspan = document.getElementById("pspan");
+            var Bspan = document.getElementById("Bspan");
+            var Espan = document.getElementById("Espan");
+            var revdtspan = document.getElementById("revdtspan");
+            function onParameterChange(){
+                v0 = v0Input.value;
+                p = pInput.value;
+                B = BInput.value;
+                E = EInput.value;
+                dt = 1 / revdtInput.value;
+                v0span.textContent = "v0 = " + v0;
+                pspan.textContent = "q/m = " + p;
+                Bspan.textContent = "B = " + B;
+                Espan.textContent = "E = " + E;
+                revdtspan.textContent = "dt = " + dt;
+                resetCanvas();
+                drawAnalyticLine(x0, y0, v0, p, B, E, dt);
+                
+                drawSimulatedLine(x0, y0, v0, p, B, E, dt);
+                
+            }
+            function resetPos(){
+                ctx.moveTo(0, halfHeight);
+            }
+            function drawPoint(x, y){
+                ctx.lineTo(x * halfHeight, y * halfHeight);
+                ctx.stroke();
+            }
+            function resetCanvas(){
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(0,0,width,height);
+            }
+            function drawSimulatedLine(x, y, v0, p, B, E, dt){
+                ctx.strokeStyle="#00FFFF";
+                resetPos();
+                ctx.beginPath();
+                var vx = v0;
+                var vy = 0;
+                function simulate(){
+                    var nvx = vx - dt * p * vy * B;
+                    var nvy = vy + dt * p * (vx * B - E);
+                    vx = nvx;
+                    vy = nvy;
+                    x += vx * dt;
+                    y += vy * dt;
+                }
+                for(var i = 0; i < 5 / dt; i++){
+                    simulate();
+                    drawPoint(x, y);
+                }
+                ctx.closePath();
+            }
+            function drawAnalyticLine(x, y, v0, p, B, E, dt){
+                ctx.strokeStyle="#FF00FF";
+                resetPos();
+                ctx.beginPath();
+                var beta = p * (E - v0 * B);
+                var pB = p * B;
+                var betaOverPsBs = beta / (pB * pB);
+                var EOverB = E / B;
+                var cx = x;
+                var cy = y - betaOverPsBs;
+                for(var t = 0; t < 5; t += dt){
+                    var x = -Math.sin(pB * t) * betaOverPsBs + EOverB * t + cx;
+                    var y = Math.cos(pB * t) * betaOverPsBs + cy;
+                    drawPoint(x, y);
+                }
+                ctx.closePath();
+            }
+
+            resetCanvas();
+            onParameterChange();
+        </script>
+    </body>
+</html>
